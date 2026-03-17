@@ -46,6 +46,19 @@ urlpatterns = [
 
     path("recommended/", recommended_courses),
 
+    path("api/save-message/", views.save_message),
+
+    path("api/upload-file/", views.upload_file),
+
+    path("api/update-status/", views.update_status),
+
+    path("chat/", views.chat_page),
+
+    path("send-message/", views.send_message),
+
+    path("get-messages/", views.get_messages)
+    
+
   
 
     

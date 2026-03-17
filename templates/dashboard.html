@@ -15,15 +15,11 @@ color:white;
 min-height:100vh;
 }
 
-/* glass navbar */
-
 .navbar-glass{
 background:rgba(255,255,255,0.1);
 backdrop-filter:blur(12px);
 border-bottom:1px solid rgba(255,255,255,0.2);
 }
-
-/* main card */
 
 .glass-card{
 background:rgba(255,255,255,0.1);
@@ -32,8 +28,6 @@ border-radius:16px;
 padding:20px;
 box-shadow:0 8px 20px rgba(0,0,0,0.3);
 }
-
-/* stat cards */
 
 .stat-card{
 text-align:center;
@@ -48,8 +42,6 @@ transition:0.3s;
 transform:translateY(-5px);
 box-shadow:0 10px 25px rgba(0,255,180,0.3);
 }
-
-/* activity */
 
 .activity-box{
 background:rgba(255,255,255,0.08);
@@ -75,23 +67,16 @@ padding:10px;
 
 <body>
 
-<!-- GLASS NAVBAR -->
-
 <nav class="navbar navbar-expand-lg navbar-glass">
 <div class="container">
 
 <a class="navbar-brand text-white fw-bold" href="/">EduNexus</a>
 
 <div>
-
 <a class="btn btn-light btn-sm" href="/my-courses/">My Courses</a>
-
 <a class="btn btn-warning btn-sm" href="/plans/">Plans</a>
-
 <a class="btn btn-info btn-sm" href="/notifications/">Notifications</a>
-
 <a class="btn btn-success btn-sm" href="/dashboard/">Analytics</a>
-
 </div>
 
 </div>
@@ -101,8 +86,6 @@ padding:10px;
 <div class="container mt-4">
 
 <h2 class="dashboard-title">Analytics Dashboard</h2>
-
-<!-- STATISTICS -->
 
 <div class="row g-3">
 
@@ -134,59 +117,61 @@ padding:10px;
 </div>
 </div>
 
+<div class="col-md-3">
+<div class="stat-card">
+<h5>Total Messages</h5>
+<h3 id="msgCount">0</h3>
+</div>
 </div>
 
-
-<!-- CHART -->
+</div>
 
 <div class="glass-card mt-4">
 
 <h5>Most Popular Course</h5>
 <p>{{ popular_course.course__title }}</p>
+<p id="topUser">Top User: -</p>
 
 <h4 class="mt-4">Platform Statistics</h4>
 
-<canvas id="analyticsChart"></canvas>
+<!-- ✅ OLD BAR CHART -->
+<canvas id="statsChart" height="120"></canvas>
+
+<h5 class="mt-4">Chat Analytics</h5>
+
+<!-- ✅ NEW LINE CHART -->
+<canvas id="messageChart" height="120"></canvas>
 
 </div>
-
-
-<!-- ACTIVITY -->
 
 <div class="glass-card mt-4">
 
 <h5>Recent User Activity</h5>
 
 {% for a in recent_activity %}
-
 <div class="activity-box">
-
 <strong>{{ a.user.username }}</strong> - {{ a.activity_type }}
-
 </div>
-
 {% empty %}
-
 <p>No recent activity</p>
-
 {% endfor %}
 
 </div>
 
 </div>
 
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 
-const ctx = document.getElementById('analyticsChart').getContext('2d');
+// ✅ OLD BAR CHART (THIS WAS MISSING)
+const statsCtx = document.getElementById('statsChart').getContext('2d');
 
 const users = Number("{{ users }}");
 const courses = Number("{{ courses }}");
 const enrollments = Number("{{ enrollments }}");
 
-new Chart(ctx, {
+new Chart(statsCtx, {
     type: 'bar',
     data: {
         labels: ['Users', 'Courses', 'Enrollments'],
@@ -195,14 +180,38 @@ new Chart(ctx, {
             data: [users, courses, enrollments],
             backgroundColor: ['#0096ff','#00ffa6','#4e73df']
         }]
-    },
-    options: {
-        scales: {
-            y: {
-                beginAtZero: true
-            }
-        }
     }
+});
+
+
+// ✅ NEW LINE CHART
+const msgCtx = document.getElementById('messageChart').getContext('2d');
+
+fetch("/analytics/")
+.then(res => res.json())
+.then(data => {
+
+    document.getElementById("msgCount").innerText = data.total_messages;
+
+    document.getElementById("topUser").innerText =
+        "Top User: " + (data.most_active_user ? data.most_active_user.sender__username : "None");
+
+    const days = data.messages_per_day.map(x => x.day);
+    const counts = data.messages_per_day.map(x => x.total);
+
+    new Chart(msgCtx, {
+        type: 'line',
+        data: {
+            labels: days,
+            datasets: [{
+                label: 'Messages per Day',
+                data: counts,
+                borderColor: '#00ffa6',
+                fill: false
+            }]
+        }
+    });
+
 });
 
 </script>

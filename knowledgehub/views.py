@@ -10,6 +10,8 @@ from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from .models import ActivityLog
 from django.core.mail import send_mail
+from .models import ChatRoom, Message
+from .models import UserStatus
 
 from .models import (
     Course,
@@ -34,13 +36,25 @@ def analytics_dashboard(request):
     total_revenue = Payment.objects.aggregate(
         total=Sum("amount")
     )["total"] or 0
+    total_messages = Message.objects.count()
+    most_active_user = Message.objects.values("sender__username") \
+        .annotate(total=Count("id")) \
+        .order_by("-total") \
+        .first()
+    
+    messages_per_day = Message.objects.extra(
+        select={'day': "date(timestamp)"}
+    ).values('day').annotate(total=Count('id')).order_by('day')
 
     data = {
         "total_users": total_users,
         "total_courses": total_courses,
         "total_enrollments": total_enrollments,
         "total_revenue": total_revenue,
-        "completed_courses": completed_courses
+        "completed_courses": completed_courses,
+         "total_messages": total_messages,
+        "most_active_user": most_active_user,
+        "messages_per_day": list(messages_per_day)
     }
 
     return JsonResponse(data)
@@ -349,6 +363,7 @@ def rate_course(request, course_id):
         ).delete()
 
         # create fresh rating
+        
         CourseRating.objects.create(
             user=request.user,
             course=course,
@@ -458,6 +473,91 @@ def notification_count(request):
 
     return {"unread_count": unread}
 
+
+
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+@csrf_exempt
+def save_message(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        user = User.objects.get(username=data["username"])
+        room, _ = ChatRoom.objects.get_or_create(name=data["room"])
+
+        Message.objects.create(
+            sender=user,
+            room=room,
+            text=data.get("message", "")
+        )
+
+        Notification.objects.create(
+    user=user,
+    message=f"New message from {user.username}"
+)
+
+        return JsonResponse({"status": "saved"})
+    
+
+@csrf_exempt
+def upload_file(request):
+    if request.method == "POST":
+        file = request.FILES.get("file")
+        username = request.POST.get("username")
+
+        user = User.objects.get(username=username)
+        room, _ = ChatRoom.objects.get_or_create(name="global")
+
+        Message.objects.create(
+            sender=user,
+            room=room,
+            file=file
+        )
+
+        return JsonResponse({"status": "file uploaded"})
+    
+
+@csrf_exempt
+def update_status(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+
+        user = User.objects.get(username=data["username"])
+        status, _ = UserStatus.objects.get_or_create(user=user)
+
+        status.is_online = data["is_online"]
+        status.save()
+
+        return JsonResponse({"status": "updated"})  
+
+
+
+
+def chat_page(request):
+    return render(request, "chat.html")  
+
+
+
+from django.http import JsonResponse
+
+chat_messages = []
+
+def send_message(request):
+    if request.method == "POST":
+        msg = request.POST.get("message")
+        user = request.POST.get("user")
+
+        chat_messages.append({
+            "user": user,
+            "message": msg
+        })
+
+        return JsonResponse({"status": "ok"})
+
+
+def get_messages(request):
+    return JsonResponse({"messages": chat_messages})
 
 
 
