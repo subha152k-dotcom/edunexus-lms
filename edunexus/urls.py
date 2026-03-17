@@ -4,6 +4,8 @@ from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
 from knowledgehub import views
+from knowledgehub.views import attendance_page, assignment_page, submit_page, grade_page
+
 
 from knowledgehub.views import (
     home, course_detail, my_courses, enroll_course, mark_completed,
@@ -56,13 +58,21 @@ urlpatterns = [
 
     path("send-message/", views.send_message),
 
-    path("get-messages/", views.get_messages)
+    path("get-messages/", views.get_messages),
+
+    
+
+    path("attendance/", attendance_page),
+    path("assignment/", assignment_page),
+    path("submit/", submit_page),
+    path("grade/", grade_page),
+]
     
 
   
 
     
 
-]
+
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

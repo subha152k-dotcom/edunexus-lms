@@ -560,6 +560,83 @@ def get_messages(request):
     return JsonResponse({"messages": chat_messages})
 
 
+import requests
+
+def attendance_page(request):
+    records = []
+
+    if request.method == "POST":
+        status = request.POST.get("status")
+
+        data = {
+            "username": request.user.username,
+            "course_id": 1,
+            "status": status
+        }
+
+        requests.post("http://127.0.0.1:8000/attendance", json=data)
+
+        records.append(data)
+
+    return render(request, "attendance.html", {
+        "records": records
+    })
+
+def assignment_page(request):
+    assignments = []
+
+    if request.method == "POST":
+        data = {
+            "title": request.POST.get("title"),
+            "desc": request.POST.get("desc")
+        }
+
+        requests.post("http://127.0.0.1:8000/assignment", json=data)
+
+        assignments.append(data)  
+
+    return render(request, "assignment.html", {
+        "assignments": assignments
+    })
+
+
+def submit_page(request):
+    submissions = []
+
+    if request.method == "POST":
+        data = {
+            "username": request.user.username,
+            "title": request.POST.get("title"),
+            "content": request.POST.get("content")
+        }
+
+        requests.post("http://127.0.0.1:8000/submit", json=data)
+
+        submissions.append(data) 
+
+    return render(request, "submit.html", {
+        "submissions": submissions
+    })
+
+
+def grade_page(request):
+    graded = []
+
+    if request.method == "POST":
+        data = {
+            "username": request.POST.get("username"),
+            "title": request.POST.get("title"),
+            "grade": request.POST.get("grade")
+        }
+
+        requests.post("http://127.0.0.1:8000/grade", params=data)
+
+        graded.append(data)  
+
+    return render(request, "grade.html", {
+        "graded": graded
+    })
+
 
 
 

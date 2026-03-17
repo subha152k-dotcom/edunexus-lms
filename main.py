@@ -2,12 +2,32 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from jose import jwt
 from datetime import datetime, timedelta
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import WebSocket
 from typing import List
 import requests
-from fastapi import UploadFile, File
 
 app = FastAPI()
+
+# ---------------- MODELS (TOP la irukanum) ----------------
+
+class Attendance(BaseModel):
+    username: str
+    course_id: int
+    status: str  
+
+class Assignment(BaseModel):
+    title: str
+    course_id: int
+    description: str             
+
+class Submission(BaseModel):
+    username: str
+    title: str
+    content: str
+    grade: str = "Not graded"
+
+
+# ---------------- CHAT MANAGER ----------------
 
 class ConnectionManager:
     def __init__(self):
@@ -24,7 +44,6 @@ class ConnectionManager:
         for connection in self.active_connections:
             await connection.send_text(message)
 
-
 manager = ConnectionManager()
 
 # ---------------- JWT CONFIG ----------------
@@ -32,7 +51,7 @@ manager = ConnectionManager()
 SECRET_KEY = "edunexus_secret_key"
 ALGORITHM = "HS256"
 
-# ---------------- SAMPLE DATA ----------------
+# ---------------- DATA ----------------
 
 courses = [
     {"id": 1, "title": "Python Basics", "is_premium": False},
@@ -49,6 +68,10 @@ enrollments = []
 users = []
 subscriptions = []
 payments = []
+attendance_records = []
+assignments = []
+submissions = []
+notifications = []
 
 plans = [
     {"id": 1, "name": "Basic", "price": 500, "duration": 30},
@@ -141,14 +164,7 @@ def subscribe(req: SubscribeRequest):
 def payments_user(username: str):
     return [p for p in payments if p["username"] == username]
 
-# ---------------- RECOMMEND ----------------
-
-@app.get("/recommend/{username}")
-def recommend(username: str):
-    access = has_active_subscription(username)
-    return [c for c in courses if access or not c["is_premium"]]
-
-# ---------------- EXTRA APIs (IMPORTANT) ----------------
+# ---------------- EXTRA ----------------
 
 @app.get("/analytics")
 def analytics():
@@ -159,11 +175,8 @@ def analytics():
     }
 
 @app.get("/notifications")
-def notifications():
-    return [
-        {"message": "Course enrolled"},
-        {"message": "Lesson completed"}
-    ]
+def get_notifications():
+    return notifications
 
 @app.get("/activity")
 def activity():
@@ -172,35 +185,45 @@ def activity():
         {"user": "Subha", "action": "Completed Lesson"}
     ]
 
+# ---------------- ATTENDANCE ----------------
 
-@app.get("/activity")
-def activity():
-    return [
-        {"user": "Subha", "action": "Enrolled Course"},
-    ]
-@app.websocket("/ws/chat/{room}")
-async def chat(websocket: WebSocket, room: str):
-    await websocket.accept()
+@app.post("/attendance")
+def mark_attendance(data: Attendance):
 
-    while True:
-        data = await websocket.receive_text()
+    for a in attendance_records:
+        if a["username"] == data.username and a["course_id"] == data.course_id:
+            return {"message": "Already marked ❌"}
 
-        print("RECEIVED:", data)
+    attendance_records.append(data.dict())
+    return {"message": "Attendance marked ✅"}
 
-        user, message = data.split("|")
+@app.get("/attendance/{username}")
+def view_attendance(username: str):
+    return [a for a in attendance_records if a["username"] == username]
 
-        await websocket.send_json({
-            "user": user,
-            "message": message
-        })
+# ---------------- ASSIGNMENT ----------------
 
+@app.post("/assignment")
+def create_assignment(data: Assignment):
+    assignments.append(data.dict())
+    return {"message": "Assignment created"}
 
-@app.websocket("/ws/chat/general")
-async def websocket_chat(websocket: WebSocket):
-    await websocket.accept()
+@app.post("/submit")
+def submit_assignment(data: Submission):
+    submissions.append(data.dict())
+    return {"message": "Submitted"}
 
-    while True:
-        data = await websocket.receive_text()
-        print("RECEIVED:", data)
+@app.post("/grade")
+def grade_assignment(username: str, title: str, grade: str):
+    for s in submissions:
+        if s["username"] == username and s["title"] == title:
+            s["grade"] = grade
+            return {"message": "Graded"}
+    return {"error": "Not found"}
 
-        await websocket.send_text(data)       
+# ---------------- NOTIFICATION ----------------
+
+@app.post("/notify")
+def send_notification(message: str):
+    notifications.append({"message": message})
+    return {"message": "Notification sent"}
