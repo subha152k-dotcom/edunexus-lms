@@ -134,12 +134,12 @@ padding:10px;
 
 <h4 class="mt-4">Platform Statistics</h4>
 
-<!-- ✅ OLD BAR CHART -->
+
 <canvas id="statsChart" height="120"></canvas>
 
 <h5 class="mt-4">Chat Analytics</h5>
 
-<!-- ✅ NEW LINE CHART -->
+
 <canvas id="messageChart" height="120"></canvas>
 
 </div>
@@ -164,7 +164,7 @@ padding:10px;
 
 <script>
 
-// ✅ OLD BAR CHART (THIS WAS MISSING)
+
 const statsCtx = document.getElementById('statsChart').getContext('2d');
 
 const users = Number("{{ users }}");
@@ -184,7 +184,7 @@ new Chart(statsCtx, {
 });
 
 
-// ✅ NEW LINE CHART
+
 const msgCtx = document.getElementById('messageChart').getContext('2d');
 
 fetch("/analytics/")

@@ -12,6 +12,7 @@ from .models import ActivityLog
 from django.core.mail import send_mail
 from .models import ChatRoom, Message
 from .models import UserStatus
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import (
     Course,
@@ -636,6 +637,62 @@ def grade_page(request):
     return render(request, "grade.html", {
         "graded": graded
     })
+
+
+import random
+from django.http import JsonResponse
+
+otp_store = {}
+
+@csrf_exempt
+def send_otp(request):
+    if request.method == "POST":
+        import json
+        data = json.loads(request.body)
+
+        email = data.get("email")
+        otp = str(random.randint(100000, 999999))
+
+        otp_store[email] = otp
+
+        print("OTP:", otp)   
+
+        return JsonResponse({"status": "otp sent"}) 
+
+
+@csrf_exempt
+def verify_otp(request):
+    if request.method == "POST":
+        import json
+        data = json.loads(request.body)
+
+        email = data.get("email")
+        otp = data.get("otp")
+
+        if otp_store.get(email) == otp:
+            return JsonResponse({"access_token": "success"})
+        else:
+            return JsonResponse({"error": "invalid otp"}) 
+
+
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+
+
+@csrf_exempt
+def google_login(request):
+    return JsonResponse({"access_token": "google_success"})
+
+
+@csrf_exempt
+def facebook_login(request):
+    return JsonResponse({"access_token": "facebook_success"})
+
+
+@csrf_exempt
+def github_login(request):
+    return JsonResponse({"access_token": "github_success"})             
 
 
 

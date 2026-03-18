@@ -5,6 +5,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from knowledgehub import views
 from knowledgehub.views import attendance_page, assignment_page, submit_page, grade_page
+from knowledgehub.views import send_otp, verify_otp
+from knowledgehub.views import google_login, facebook_login, github_login
 
 
 from knowledgehub.views import (
@@ -60,19 +62,25 @@ urlpatterns = [
 
     path("get-messages/", views.get_messages),
 
-    
-
     path("attendance/", attendance_page),
+
     path("assignment/", assignment_page),
+
     path("submit/", submit_page),
+
     path("grade/", grade_page),
+
+    path("auth/send-otp", send_otp),
+
+    path("auth/verify-otp", verify_otp),
+
+    path("auth/google-login", google_login),
+
+    path("auth/facebook-login", facebook_login),
+
+    path("auth/github-login", github_login),
+
+    path("login/", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
 ]
     
-
-  
-
-    
-
-
-
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

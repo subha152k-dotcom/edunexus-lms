@@ -169,4 +169,29 @@ class UserStatus(models.Model):
     last_seen = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username} - {'Online' if self.is_online else 'Offline'}"    
+        return f"{self.user.username} - {'Online' if self.is_online else 'Offline'}"   
+
+
+
+
+
+
+class SocialAccount(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    provider = models.CharField(max_length=50)  
+    social_id = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.provider}"
+
+
+class OTPLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    email = models.EmailField()
+    otp = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email     

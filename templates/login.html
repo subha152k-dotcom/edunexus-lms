@@ -27,7 +27,8 @@ backdrop-filter:blur(12px);
 padding:40px;
 border-radius:16px;
 box-shadow:0 10px 30px rgba(0,0,0,0.4);
-width:360px;
+width:130%;
+max-width:490px;
 }
 
 /* title */
@@ -65,16 +66,14 @@ background:#0075cc;
 </style>
 
 </head>
-
 <body>
 
 <div class="login-box">
 
 <h3 class="login-title">EduNexus Login</h3>
 
-<form method="post">
+<form method="post" action="/login/" id="loginForm">
 {% csrf_token %}
-
 <div class="mb-3">
 <label class="form-label">Username</label>
 <input type="text" name="username" class="form-control">
@@ -89,9 +88,168 @@ background:#0075cc;
 Login
 </button>
 
+
 </form>
 
+<hr>
+
+<!-- OTP SECTION -->
+
+<input type="email" id="email" placeholder="Enter Email" class="form-control mt-2">
+
+<button onclick="sendOTP()" class="btn btn-success w-100 mt-2">
+Send OTP
+</button>
+
+<input type="text" id="otp" placeholder="Enter OTP" class="form-control mt-2">
+
+<button onclick="verifyOTP()" class="btn btn-primary w-100 mt-2">
+Verify OTP Login
+</button>
+
+<hr>
+
+<!-- SOCIAL LOGIN -->
+
+<button onclick="googleLogin()" class="btn btn-danger w-100 mt-2">
+Login with Google
+</button>
+
+<button onclick="facebookLogin()" class="btn btn-primary w-100 mt-2">
+Login with Facebook
+</button>
+
+<button onclick="githubLogin()" class="btn btn-dark w-100 mt-2">
+Login with GitHub
+</button>
+
+<!-- TOKEN DISPLAY -->
+
+
+
 </div>
+
+</body>
+<script>
+function sendOTP(){
+    let email = document.getElementById("email").value;
+
+    fetch("/auth/send-otp", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({email: email})
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        alert("OTP Sent ✅");
+    });
+}
+
+
+//  VERIFY OTP 
+function verifyOTP(){
+    let email = document.getElementById("email").value;
+    let otp = document.getElementById("otp").value;
+
+    fetch("/auth/verify-otp", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({email: email, otp: otp})
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.access_token){
+
+            alert("OTP Verified ✅");
+
+            
+            window.location.href = "/";
+
+        }else{
+            alert("Invalid OTP ❌");
+        }
+    });
+}
+
+
+//  GOOGLE LOGIN
+
+function googleLogin(){
+
+    fetch("/auth/google-login", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            email: "demo@gmail.com",
+            google_id: "123"
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.access_token){
+            alert("Google Login Success ");
+            window.location.href = "/";
+        }
+    });
+
+}
+
+
+//  FACEBOOK LOGIN
+
+function facebookLogin(){
+
+    fetch("/auth/facebook-login", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            email: "fb@gmail.com",
+            facebook_id: "111"
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.access_token){
+            alert("Facebook Login Success ");
+            window.location.href = "/";
+        }
+    });
+
+}
+
+
+//  GITHUB LOGIN
+
+function githubLogin(){
+
+    fetch("/auth/github-login", {
+        method:"POST",
+        headers:{
+            "Content-Type":"application/json"
+        },
+        body: JSON.stringify({
+            email: "git@gmail.com",
+            github_id: "222"
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        if(data.access_token){
+            alert("GitHub Login Success ");
+            window.location.href = "/";
+        }
+    });
+
+}
+</script>
 
 </body>
 </html>

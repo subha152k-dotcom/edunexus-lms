@@ -5,10 +5,23 @@ from datetime import datetime, timedelta
 from fastapi import WebSocket
 from typing import List
 import requests
+from auth_otp import router as otp_router
+
+
+from auth_google import router as google_router
+from auth_facebook import router as fb_router
+from auth_github import router as github_router
+
+
+
 
 app = FastAPI()
+app.include_router(otp_router, prefix="/auth")
+app.include_router(google_router, prefix="/auth")
+app.include_router(fb_router, prefix="/auth")
+app.include_router(github_router, prefix="/auth")
 
-# ---------------- MODELS (TOP la irukanum) ----------------
+# ---------------- MODELS  ----------------
 
 class Attendance(BaseModel):
     username: str

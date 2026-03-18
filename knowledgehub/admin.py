@@ -7,6 +7,7 @@ from .models import Plan, Subscription, Payment
 from .models import UserActivity
 from .models import Notification
 from .models import ChatRoom, Message, UserStatus
+from .models import SocialAccount, OTPLog
 
 admin.site.register(Course)
 admin.site.register(Lesson)
@@ -20,3 +21,5 @@ admin.site.register(Notification)
 admin.site.register(ChatRoom)
 admin.site.register(Message)
 admin.site.register(UserStatus)
+admin.site.register(SocialAccount)
+admin.site.register(OTPLog)
